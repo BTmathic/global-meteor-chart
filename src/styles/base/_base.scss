@@ -1,0 +1,60 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+body {
+    background: #777;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: $m-size;
+    line-height: 1.6;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: default;
+}
+
+#container {
+  background: rgba(255,255,255, 0.8);
+  border-radius: 5px;
+  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.33), 0 3px 12px 0 rgba(0, 0, 0, 0.25);
+  margin: 0 auto;
+  padding: 0 20px;
+  padding-bottom: 10px;
+  text-align: center;
+  width: 800px;
+}
+
+#container h1 {
+  padding-top: 5px;
+}
+
+.tooltip {
+  background: black;
+  color: white;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 5px;
+  pointer-events: none;
+  position: absolute;
+  text-align: center;
+}
+
+.flags {
+  display: inline-block;
+  height: 500px;
+  position: absolute;
+  width: 500px;
+}
+
+.flag {
+  position: absolute;
+}
