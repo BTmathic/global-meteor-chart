@@ -2,126 +2,135 @@ import 'normalize.css/normalize.css';
 import './styles/styles.scss';
 import * as d3 from 'd3';
 
-fetch('https://raw.githubusercontent.com/DealPete/forceDirected/master/countries.json').then((response) => {
-  return response.json();
-}).then((data) => {
+function fetchData() {
+  let list = [];
+  let urls = ['https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/meteorite-strike-data.json', 'https://raw.githubusercontent.com/andybarefoot/andybarefoot-www/master/maps/mapdata/custom50.json'];
+  let fetches = [];
+
+  urls.forEach(function(url, i) {
+    list.push(
+      fetch(url)
+        .then(dataWrappedInPromise => dataWrappedInPromise.json())
+        .then((data) => {
+          fetches[i] = data;
+      })
+    );
+  });
+
+  Promise
+    .all(list)
+    .then(function () {
+      useData(fetches);
+    });
+}
+
+fetchData();
+
+function useData([meteorData, countryData]) {
   let margin;
   let width, height;
-  let flags = d3.select('#container').append('div');
-  let svg = d3.select('#container').append('svg');
+  let minZoom, maxZoom, midX, midY;
+  let svg;
+  let wholeMap, countries, projection;
+  let path;
+  let zoom = d3.zoom().on('zoom', zoomed);
   let popup = d3.select('body').append('div');
-
-  const nodes = data.nodes;
-  const links = data.links;
 
   main();
 
   function main() {
-    flags
-      .attr('class', 'flags');
+    svg = d3.select('#container').append('svg');
+    wholeMap = svg.append('g').attr('id', 'map');
+    setSize();
+    setZoom();
+    window.onresize = () => {
+      svg
+        .attr('width', document.getElementById('container').offsetWidth)
+        .attr('height', document.getElementById('container').offsetHeight)
+      setZoom()
+    };
+
+    countries = wholeMap
+      .selectAll('path')
+      .data(countryData.features).enter()
+      .append('path')
+      .attr('d', path)
+      .attr('id', (d, i) => 'country' + d.properties.iso_a3)
+      .attr('class', 'country')
+      .on('mouseover', (d, i) => mouseover(d, i))
+      .on('mouseout', mouseout);
+
     popup
       .attr('class', 'tooltip')
       .style('opacity', 0);
 
-    setSize(data)
-    drawGraph(data);
+    drawMeteors();
   }
-  
 
-  function setSize(data) {
+  function setSize() {
     margin = { top: 0, right: 0, bottom: 0, left: 0 };
-    width = 700 - margin.left - margin.right;
-    height = 500 - margin.top - margin.bottom;
+    width = document.getElementById('container').offsetWidth - margin.left - margin.right;
+    height = 0.9*document.getElementById('container').offsetHeight - margin.top - margin.bottom;
 
     svg
       .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom);
+      .attr('height', height + margin.top + margin.bottom)
+      .call(zoom);
+
+    projection = d3.geoEquirectangular()
+      .center([0, 0])
+      .scale(width / (2 * Math.PI))
+      .translate([width / 2, height / 2]);
+
+    path = d3.geoPath().projection(projection);
+
+    wholeMap
+      .append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', width)
+      .attr('height', height);
   }
 
-  function drawGraph(data) {
-    let simulation = d3.forceSimulation()
-      .force('link', d3.forceLink().id((d) => d.index))
-      .force('collide', d3.forceCollide((d) => d.r + 8).iterations(16))
-      .force('charge', d3.forceManyBody())
-      .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('x', d3.forceX(0))
-      .force('y', d3.forceY(0));
+  function setZoom() {
+    minZoom = Math.max(
+      document.getElementById('container').offsetWidth / width,
+      document.getElementById('container').offsetHeight / height
+    );
+    maxZoom = 20 * minZoom;
+    zoom
+      .scaleExtent([minZoom, maxZoom])
+      .translateExtent([[0, 0], [width, height]]);
 
-    let link = svg.append('g')
-      .attr('class', 'links')
-      .selectAll('line')
-      .data(data.links)
-      .enter()
-      .append('line')
-      .attr('stroke', 'black')
-
-    let nodes = d3.select('.flags').selectAll('img')
-      .data(data.nodes)
-      .enter()
-      .append('img')
-      .attr('src', 'dist/blank.gif')
-      .attr('class', (d) => `flag flag-${d.code}`)
-      .attr('alt', (d) => `${d.country} flag`)
-      .on('mouseover', (d) => mouseover(d))
-      .on('mouseout', mouseout)
-      .call(d3.drag()
-        .on('start', dragStarted)
-        .on('drag', dragged)
-        .on('end', dragEnded));
-
-    let ticked = function() {
-      link
-        .attr('x1', (d) => d.source.x)
-        .attr('y1', (d) => d.source.y)
-        .attr('x2', (d) => d.target.x)
-        .attr('y2', (d) => d.target.y)
-        .style('fill', 'none')
-        .style('stroke', '#666')
-        .style('stroke-width', '2px');
-
-      nodes
-        .style('left', (d) => d.x + 'px')
-        .style('top', (d) => d.y + 'px')
-    }
-
-    simulation
-      .nodes(data.nodes)
-      .on('tick', ticked)
-
-    simulation.force('link')
-      .links(data.links);
-
-    function dragStarted(d) {
-      if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x
-      d.fy = d.y;
-    }
-
-    function dragged(d) {
-      d.fx = d3.event.x;
-      d.fy = d3.event.y;
-    }
-
-    function dragEnded(d) {
-      if (!d3.event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    }
+    midX = (document.getElementById('container').offsetWidth - minZoom * width) / 2;
+    midY = (document.getElementById('container').offsetHeight - minZoom * height) / 2;
+    svg.call(zoom.transform, d3.zoomIdentity.translate(midX, midY).scale(minZoom));
   }
 
-  function mouseover(d) {
+  function drawMeteors(meteorData) {
+
+  }
+
+  function zoomed() {
+    const zoomTransform = d3.event.transform;
+    wholeMap.attr(
+      'transform',
+      `translate(${zoomTransform.x}, ${zoomTransform.y}) scale(${zoomTransform.k})`
+    )
+  }
+
+  function mouseover(d, i) {
     popup.transition()
       .duration(200)
       .style('opacity', 0.9)
-      popup.html(`<div>${d.country}</div>`)
-        .style('left', (d3.event.pageX + 5) + 'px')
-        .style('top', (d3.event.pageY - 50) + 'px')
+    popup.html(`<div>${d.country}</div>`)
+      .style('left', (d3.event.pageX + 5) + 'px')
+      .style('top', (d3.event.pageY - 50) + 'px')
   }
-  
+
   function mouseout() {
     popup.transition()
       .duration(500)
       .style('opacity', 0);
   }
-
-});
+}
