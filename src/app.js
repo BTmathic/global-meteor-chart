@@ -31,7 +31,8 @@ function useData([meteorData, countryData]) {
   let width, height;
   let minZoom, maxZoom, midX, midY;
   let svg;
-  let wholeMap, countries, projection;
+  let projection, wholeMap, countries;
+  let filteredMeteorData, meteors;
   let path;
   let zoom = d3.zoom().on('zoom', zoomed);
   let popup = d3.select('body').append('div');
@@ -57,14 +58,27 @@ function useData([meteorData, countryData]) {
       .attr('d', path)
       .attr('id', (d, i) => 'country' + d.properties.iso_a3)
       .attr('class', 'country')
-      .on('mouseover', (d, i) => mouseover(d, i))
-      .on('mouseout', mouseout);
 
     popup
       .attr('class', 'tooltip')
       .style('opacity', 0);
 
-    drawMeteors();
+    // The data is incomplete with some null values for lat/lon
+    filteredMeteorData = meteorData.features.filter((data) => !!data.geometry);
+    meteors = wholeMap.append('g')
+      .selectAll('dot')
+      .data(filteredMeteorData).enter()
+      .append('circle')
+      .attr('cx', (d) => projection([d.geometry.coordinates[0], d.geometry.coordinates[1]])[0])
+      .attr('cy', (d) => projection([d.geometry.coordinates[0], d.geometry.coordinates[1]])[1])
+      .attr('r', (d) => Math.sqrt(Math.sqrt(d.properties.mass/100)))
+      .attr('class', 'meteor')
+      .style('fill', 'rgba(255,155,55,0.7)')
+      .style('stroke', 'black')
+      .style('stroke-width', '1')
+      .on('mouseover', (d, i) => mouseover(d, i))
+      .on('mouseout', mouseout);
+
   }
 
   function setSize() {
@@ -107,10 +121,6 @@ function useData([meteorData, countryData]) {
     svg.call(zoom.transform, d3.zoomIdentity.translate(midX, midY).scale(minZoom));
   }
 
-  function drawMeteors(meteorData) {
-
-  }
-
   function zoomed() {
     const zoomTransform = d3.event.transform;
     wholeMap.attr(
@@ -123,7 +133,9 @@ function useData([meteorData, countryData]) {
     popup.transition()
       .duration(200)
       .style('opacity', 0.9)
-    popup.html(`<div>${d.country}</div>`)
+    popup.html(`<div><span class='category'>Area: </span> ${d.properties.name}</div>
+      <div><span class='category'>Year: </span> ${d.properties.year.split('-')[0]}</div>
+      <div><span class='category'>Mass: </span> ${d.properties.mass}</div>`)
       .style('left', (d3.event.pageX + 5) + 'px')
       .style('top', (d3.event.pageY - 50) + 'px')
   }

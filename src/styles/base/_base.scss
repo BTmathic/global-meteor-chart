@@ -36,12 +36,16 @@ button:disabled {
   background: black;
   color: white;
   border-radius: 5px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: bold;
   padding: 5px;
   pointer-events: none;
   position: absolute;
-  text-align: center;
+  text-align: left;
+}
+
+.category {
+  color: lightBlue;
 }
 
 svg rect {
