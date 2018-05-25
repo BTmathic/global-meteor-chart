@@ -71,8 +71,7 @@ function useData([meteorData, countryData]) {
       .append('circle')
       .attr('cx', (d) => projection([d.geometry.coordinates[0], d.geometry.coordinates[1]])[0])
       .attr('cy', (d) => projection([d.geometry.coordinates[0], d.geometry.coordinates[1]])[1])
-      .attr('r', (d) => Math.sqrt(Math.sqrt(d.properties.mass/100)))
-      .attr('class', 'meteor')
+      .attr('r', (d) => Math.sqrt(Math.sqrt(d.properties.mass/500)))
       .style('fill', 'rgba(255,155,55,0.7)')
       .style('stroke', 'black')
       .style('stroke-width', '1')
@@ -83,12 +82,12 @@ function useData([meteorData, countryData]) {
 
   function setSize() {
     margin = { top: 0, right: 0, bottom: 0, left: 0 };
-    width = document.getElementById('container').offsetWidth - margin.left - margin.right;
-    height = 0.9*document.getElementById('container').offsetHeight - margin.top - margin.bottom;
+    width = 3000;//document.getElementById('container').offsetWidth - margin.left - margin.right;
+    height = 1500;//0.9*document.getElementById('container').offsetHeight - margin.top - margin.bottom;
 
     svg
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
+      .attr('width', document.getElementById('container').offsetWidth)//width + margin.left + margin.right)
+      .attr('height', document.getElementById('container').offsetHeight)//height + margin.top + margin.bottom)
       .call(zoom);
 
     projection = d3.geoEquirectangular()

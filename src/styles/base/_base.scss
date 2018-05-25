@@ -57,3 +57,15 @@ svg rect {
   stroke: #2A2C39;
   stroke-width: 1;
 }
+
+@media (max-width: 700px) {
+  #container h1 {
+    font-size: 150%;
+  }
+}
+
+@media (max-width: 500px) {
+  #container h1 {
+    font-size: 100%;
+  }
+}
