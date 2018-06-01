@@ -63,7 +63,7 @@ function useData([meteorData, countryData]) {
       .attr('class', 'tooltip')
       .style('opacity', 0);
 
-    // The data is incomplete with some null values for lat/lon
+    // The data is incomplete with some null values for lat/lon, so we remove them
     filteredMeteorData = meteorData.features.filter((data) => !!data.geometry);
     meteors = wholeMap.append('g')
       .selectAll('dot')
@@ -82,12 +82,12 @@ function useData([meteorData, countryData]) {
 
   function setSize() {
     margin = { top: 0, right: 0, bottom: 0, left: 0 };
-    width = 3000;//document.getElementById('container').offsetWidth - margin.left - margin.right;
-    height = 1500;//0.9*document.getElementById('container').offsetHeight - margin.top - margin.bottom;
+    width = 3000;
+    height = 1500;
 
     svg
-      .attr('width', document.getElementById('container').offsetWidth)//width + margin.left + margin.right)
-      .attr('height', document.getElementById('container').offsetHeight)//height + margin.top + margin.bottom)
+      .attr('width', document.getElementById('container').offsetWidth)
+      .attr('height', document.getElementById('container').offsetHeight)
       .call(zoom);
 
     projection = d3.geoEquirectangular()
