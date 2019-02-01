@@ -16,6 +16,6 @@ We display national contiguity (the connection relationship) of the countries of
 
 ### Built tools
 
-* Webpack
+* Parcel
 * Yarn
 * Babel
